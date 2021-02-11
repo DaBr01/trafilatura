@@ -7,10 +7,11 @@ X-Path expressions needed to extract and filter the main text content
 
 BODY_XPATH = [
     '''.//*[(self::article or self::div or self::main or self::section)][contains(@id, "content-main") or
-    contains(@class, "content-main") or contains(@class, "content_main") or
+    contains(@class, "content-main") or contains(@class, "page-content") or contains(@class, "content_main") or
     contains(@id, "content-body") or contains(@class, "content-body") or
     contains(@class, "story-body") or
-    @id="article" or @class="post" or @class="entry"]''',
+    contains(@class, "content-grid") or contains(@class, "landing-content-grid") or
+    @id="landing-content-grid" or @id="article" or @class="post" or @class="entry"]''',
     '''.//*[(self::article or self::div or self::main or self::section)][
     contains(@class, "post-text") or contains(@class, "post_text") or
     contains(@class, "post-body") or contains(@class, "post-entry") or contains(@class, "postentry") or
@@ -31,7 +32,7 @@ BODY_XPATH = [
     @class='postarea' or @class='art-postcontent' or
     contains(@class, 'theme-content') or contains(@class, 'blog-content') or
     contains(@class, 'section-content') or contains(@class, 'single-content') or
-    contains(@class, 'single-post') or
+    contains(@class, 'single-post') or    
     contains(@class, 'main-column') or contains(@class, 'wpb_text_column') or
     starts-with(@id, 'primary') or @class="text" or
     @class="cell" or @id="story" or @class="story" or
@@ -72,9 +73,11 @@ DISCARD_XPATH = [
     contains(@id, "bottom") or contains(@class, "bottom")]''',
     # related posts, sharing jp-post-flair jp-relatedposts, news outlets + navigation
     # or self::article
+#contains(@class, "AppHeader") or
     '''.//*[(self::div or self::item or self::list or self::p or self::section or self::span)][
-    contains(@id, "related") or contains(translate(@class, "R","r"), "related") or
+    contains(@id, "related") or contains(translate(@class, "R","r"), "related") or    
     contains(@id, "viral") or contains(@class, "viral") or
+    contains(@class, "AppHeaderstyled") or
     starts-with(@id, "shar") or starts-with(@class, "shar") or contains(@class, "share-") or
     contains(@id, "social") or contains(@class, "social") or contains(@class, "sociable") or
     contains(@id, "syndication") or contains(@class, "syndication") or

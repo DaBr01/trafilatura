@@ -13,10 +13,13 @@ import re # import regex as re
 
 from collections import OrderedDict
 from copy import deepcopy
+from xml.etree import ElementTree
 
 from lxml import etree, html
 
 # own
+from lxml.etree import Element
+
 from .external import justext_rescue, sanitize_tree, SANITIZED_XPATH, try_readability
 from .filters import (check_html_lang, content_fingerprint, duplicate_test,
                      language_filter, text_chars_test)
@@ -170,7 +173,8 @@ def handle_paragraphs(element, potential_tags, dedupbool, config):
                 if child.tag == 'hi':
                     newsub.set('rend', child.get('rend'))
                 elif child.tag == 'ref':
-                    newsub.set('target', child.get('target'))
+                    if(child.get('target') != None):
+                        newsub.set('target', child.get('target'))
             # handle line breaks
             elif child.tag == 'lb':
                 try:
@@ -270,7 +274,7 @@ def recover_wild_paragraphs(tree, result_body, potential_tags=TAG_CATALOG, dedup
         etree.strip_tags(search_tree, 'span')
     else:
         etree.strip_tags(search_tree, 'a', 'ref', 'span')
-    processed_elems = [handle_paragraphs(element, potential_tags, deduplicate, config) for element in search_tree.iter('blockquote', 'code', 'p', 'pre', 'q', 'quote')] # 'head', 'list'
+    processed_elems = [handle_paragraphs(element, potential_tags, deduplicate, config) for element in search_tree.iter('blockquote', 'code', 'p', 'pre', 'q', 'quote', 'head')] # 'head', 'list'
     result_body.extend(list(filter(None.__ne__, processed_elems)))
     return result_body
 
@@ -339,6 +343,7 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
     '''Find the main content of a page using a set of XPath expressions,
        then extract relevant elements, strip them of unwanted subparts and
        convert them'''
+
     sure_thing = False
     result_body = etree.Element('body')
     potential_tags = set(TAG_CATALOG)  # + 'span'?
@@ -352,21 +357,35 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
     for expr in BODY_XPATH:
         # select tree if the expression has been found
         subtree = tree.xpath(expr)
+
         if not subtree:
             continue
-        subtree = subtree[0]
-        # prune
-        subtree = discard_unwanted(subtree)
-        # remove elements by link density
-        subtree = delete_by_link_density(subtree, 'div', backtracking=True)
-        subtree = delete_by_link_density(subtree, 'list', backtracking=False)
-        subtree = delete_by_link_density(subtree, 'p', backtracking=False)
-        # define iteration strategy
-        if 'table' in potential_tags:
-            for elem in subtree.iter('table'):
-                if link_density_test_tables(elem) is True:
-                    elem.getparent().remove(elem)
-        # skip if empty tree
+
+        st = subtree
+
+        #subtree = subtree[0]
+        for x in st:
+            # prune
+            x = discard_unwanted(x)
+
+            print(x)
+            print(ElementTree.tostring(x, encoding='unicode'))
+            print("---")
+
+            # remove elements by link density
+            x = delete_by_link_density(x, 'div', backtracking=True)
+            x = delete_by_link_density(x, 'list', backtracking=False)
+            x = delete_by_link_density(x, 'p', backtracking=False)
+            # define iteration strategy
+            if 'table' in potential_tags:
+                for elem in x.iter('table'):
+                    if link_density_test_tables(elem) is True:
+                        elem.getparent().remove(elem)
+            # skip if empty tree
+            subtree = x
+            if len(x) > 0:
+                break
+
         if len(subtree) == 0:
             continue
         # no paragraphs containing text
@@ -391,6 +410,7 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
             LOGGER.debug(expr)
             break
     temp_text = trim(' '.join(result_body.itertext()))
+
     # try parsing wild <p> elements if nothing found or text too short
     if len(result_body) == 0 or len(temp_text) < config.getint('DEFAULT', 'MIN_EXTRACTED_SIZE'):
         result_body = recover_wild_paragraphs(tree, result_body, potential_tags=potential_tags, deduplicate=deduplicate, config=config)
@@ -401,6 +421,7 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
     etree.strip_elements(result_body, 'done')
     etree.strip_tags(result_body, 'div')
     # return
+
     return result_body, temp_text, len(temp_text), sure_thing
 
 
@@ -686,7 +707,9 @@ def bare_extraction(filecontent, url=None, no_fallback=False,
         # compare if necessary
         if no_fallback is False:
             #if sure_thing is False:
+            print('fallback')
             postbody, temp_text, len_text = compare_extraction(tree, backup_tree, url, postbody, temp_text, len_text, target_language, include_formatting, include_links, include_images, config)
+            print(temp_text)
         else:
             # rescue: try to use original/dirty tree
             if sure_thing is False and len_text < config.getint('DEFAULT', 'MIN_EXTRACTED_SIZE'):

@@ -108,6 +108,7 @@ def collect_link_info(links_xpath):
 
 def link_density_test(element):
     '''Remove sections which are rich in links (probably boilerplate)'''
+
     links_xpath, mylist = element.xpath('.//ref'), []
     if links_xpath:
         elemtext = trim(element.text_content())
