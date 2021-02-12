@@ -140,8 +140,9 @@ def determine_headers():
     else:
         rnumber = randint(0, USER_AGENTS_NUM - 1)
     headers = {
-    'User-Agent': USER_AGENTS[rnumber],
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; HTC One M9 Build/MRA58K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.98 Mobile Safari/537.36'
     }
+
     return headers
 
 

@@ -367,11 +367,6 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
         for x in st:
             # prune
             x = discard_unwanted(x)
-
-            print(x)
-            print(ElementTree.tostring(x, encoding='unicode'))
-            print("---")
-
             # remove elements by link density
             x = delete_by_link_density(x, 'div', backtracking=True)
             x = delete_by_link_density(x, 'list', backtracking=False)
