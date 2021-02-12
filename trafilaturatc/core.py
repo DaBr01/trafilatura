@@ -365,7 +365,6 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
 
         #subtree = subtree[0]
         for x in st:
-            print(" ".join(x.itertext()))
             # prune
             x = discard_unwanted(x)
             # remove elements by link density
@@ -382,7 +381,6 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
             if len(x) > 0:
                 break
 
-
         if len(subtree) == 0:
             continue
         # no paragraphs containing text
@@ -396,12 +394,6 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
         # etree.strip_tags(subtree, 'lb') # BoingBoing-Bug
         # extract content
         # list(filter(None.__ne__, processed_elems))
-
-
-        print('after disc')
-        print(" ".join(subtree.itertext()))
-        print(len(subtree))
-
         result_body.extend([e for e in
                             [handle_textelem(e, potential_tags, deduplicate, config) for e in subtree.xpath('.//*')]
                             if e is not None])
@@ -409,12 +401,9 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
         while len(result_body) > 0 and result_body[-1].tag in ('fw', 'head'): # and result_body[-1].tail is None:
             result_body[-1].getparent().remove(result_body[-1])
         # exit the loop if the result has children
-
-
-        #if len(result_body) > 2: # try to change this to 0 or 2
-        #    print('break')
-        #    LOGGER.debug(expr)
-        #    break
+        if len(result_body) > 1: # try to change this to 0 or 2
+            LOGGER.debug(expr)
+            break
     temp_text = trim(' '.join(result_body.itertext()))
 
     # try parsing wild <p> elements if nothing found or text too short
@@ -428,9 +417,6 @@ def extract_content(tree, include_tables=False, include_images=False, include_li
     etree.strip_tags(result_body, 'div')
     # return
 
-    for x in result_body:
-        print(x)
-    print(sure_thing)
     return result_body, temp_text, len(temp_text), sure_thing
 
 
@@ -508,8 +494,6 @@ def compare_extraction(tree, backup_tree, url, body, text, len_text, target_lang
         LOGGER.debug('extraction values: %s %s for %s', len_text, len_algo, url)
         algo_flag = False
     # apply decision
-    print('algo_flag')
-    print(algo_flag)
     if algo_flag is True:
         body, text, len_text = temppost_algo, algo_text, len_algo
         LOGGER.info('using generic algorithm: %s', url)
@@ -517,7 +501,6 @@ def compare_extraction(tree, backup_tree, url, body, text, len_text, target_lang
         LOGGER.info('using custom extraction: %s', url)
     # override faulty extraction # len_text < MIN_EXTRACTED_SIZE*10
     if body.xpath(SANITIZED_XPATH):
-        print('fallback change')
         body2, text2, len_text2, jt_result = justext_rescue(tree, url, target_language, body, 0, '')
         if jt_result is True: # and not len_text > 2*len_text2:
             LOGGER.debug('using justext, length: %s', len_text2)  #MIN_EXTRACTED_SIZE:
@@ -527,7 +510,6 @@ def compare_extraction(tree, backup_tree, url, body, text, len_text, target_lang
             body, text, len_text = sanitize_tree(body, include_formatting, include_links, include_images)
     # try with justext
     elif len_text < config.getint('DEFAULT', 'MIN_EXTRACTED_SIZE'):
-        print('fallback change')
         LOGGER.error('not enough text %s', url)
         body, text, len_text, jt_result = justext_rescue(tree, url, target_language, body, len_text, text)
         LOGGER.debug('justext length %s', len_text)
@@ -535,8 +517,6 @@ def compare_extraction(tree, backup_tree, url, body, text, len_text, target_lang
             # post-processing: remove unwanted sections
             body, text, len_text = sanitize_tree(body, include_formatting, include_links, include_images)
     else:
-        print('algo_flag')
-        print(algo_flag)
         if algo_flag is True:
             body, text, len_text = sanitize_tree(body, include_formatting, include_links, include_images)
     # second backup
@@ -718,13 +698,11 @@ def bare_extraction(filecontent, url=None, no_fallback=False,
 
         # extract content
         postbody, temp_text, len_text, sure_thing = extract_content(cleaned_tree, include_tables, include_images, include_links, deduplicate, config)
-        print(temp_text)
+
         # compare if necessary
         if no_fallback is False:
             #if sure_thing is False:
-            print('fallback')
             postbody, temp_text, len_text = compare_extraction(tree, backup_tree, url, postbody, temp_text, len_text, target_language, include_formatting, include_links, include_images, config)
-            print(temp_text)
         else:
             # rescue: try to use original/dirty tree
             if sure_thing is False and len_text < config.getint('DEFAULT', 'MIN_EXTRACTED_SIZE'):
