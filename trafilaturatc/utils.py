@@ -140,7 +140,7 @@ def determine_headers():
     else:
         rnumber = randint(0, USER_AGENTS_NUM - 1)
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; HTC One M9 Build/MRA58K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.98 Mobile Safari/537.36'
     }
 
     return headers
@@ -194,7 +194,10 @@ def fetch_url(url, decode=True, no_ssl=False, config=DEFAULT_CONFIG):
             if decode is True:
                 return decode_response(response.data)
             return response
-    return None
+
+    if decode is True:
+        return decode_response(response.data)
+    return response
 
 
 def load_html(htmlobject):
